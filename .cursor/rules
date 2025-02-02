@@ -1,0 +1,70 @@
+# Cursor AI 規則設定
+rules:
+  # 定義程式碼風格
+  style:
+    naming:
+      - "變數使用 camelCase"
+      - "常數使用大寫"
+    formatting:
+      - "縮排使用2個空格"
+      - "每行不超過80字元"
+    
+  # 程式碼品質規則
+  quality:
+    functions:
+      - "函數不超過20行"
+      - "參數不超過3個"
+    code_organization:
+      - "相關的功能應組織在同一模組"
+      - "避免重複的程式碼，使用 DRY 原則"
+      - "使用有意義的變數名稱，避免縮寫"
+    
+  # 架構相關規則
+  architecture:
+    principles:
+      - "遵循 SOLID 設計原則"
+      - "使用依賴注入管理組件關係"
+      - "保持模組間低耦合高內聚"
+    structure:
+      - "使用分層架構 (例如: MVC, Clean Architecture)"
+      - "共用邏輯應抽取為可重用服務"
+    
+  # 測試相關規則
+  testing:
+    unit_tests:
+      - "每個函數都要有單元測試"
+      - "測試覆蓋率要達到80%"
+    best_practices:
+      - "使用 AAA (Arrange-Act-Assert) 模式"
+      - "mock 外部依賴"
+      - "測試命名應清楚描述測試目的"
+    
+  # 文件規範
+  documentation:
+    code_comments:
+      - "使用 JSDoc 格式撰寫文件"
+      - "複雜邏輯需添加行內註解"
+    project_docs:
+      - "README 需包含：專案說明、安裝步驟、使用方法"
+      - "保持 API 文件更新"
+      - "記錄重要的架構決策"
+    
+  # 效能考量
+  performance:
+    optimization:
+      - "避免不必要的迴圈巢狀"
+      - "使用適當的資料結構"
+      - "實作快取機制處理重複運算"
+    resources:
+      - "注意記憶體使用效率"
+      - "大型操作應使用串流處理"
+    
+  # 安全性規則
+  security:
+    input_validation:
+      - "所有使用者輸入必須進行驗證和消毒"
+      - "使用參數化查詢防止 SQL 注入"
+    best_practices:
+      - "實作適當的錯誤處理機制"
+      - "敏感資訊不可寫入日誌"
+      - "使用最新的安全函式庫" 
