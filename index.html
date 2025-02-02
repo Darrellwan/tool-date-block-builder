@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>積木日期格式工坊</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.6;
+        }
+
+        header {
+            background: #333;
+            color: white;
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        main {
+            display: flex;
+            min-height: calc(100vh - 48px); /* 扣除 header 高度 */
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .blocks-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 1rem;
+            max-width: 400px; /* 限制最大寬度 */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .block-category {
+            border: 1px solid #eee;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .block-category h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .block {
+            font-family: 'Roboto Mono', monospace;
+            background: #4CAF50;
+            color: white;
+            padding: 0.5rem;
+            margin: 0.3rem;
+            border-radius: 4px;
+            cursor: move;
+            user-select: none;
+            position: relative;
+            display: inline-block;
+            min-width: 2.5em;
+            height: 2.5em;
+            line-height: 2.5em;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: auto; /* 改用自動高度，視內容而定 */
+        }
+
+        /* 重新排序預覽容器內的元素 */
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .format-builder {
+            order: 1;
+        }
+        
+        .preview {
+            order: 2;
+            position: relative;
+            padding-bottom: 1rem;  /* 已調整預留空間 */
+        }
+        
+        .templates-section {
+            order: 3;
+        }
+
+        .format-builder {
+            flex: 1;
+        }
+
+        .drop-zone {
+            z-index: 1;
+            min-height: 100px;
+            border: 2px dashed #ccc;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f9f9f9;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .drop-zone.dragover {
+            background: #e9e9e9;
+            border-color: #4CAF50;
+        }
+
+        /* Option A 內嵌式預覽 header */
+        .preview-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .preview-button {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .preview-button:hover::after {
+            opacity: 1;
+        }
+        
+        .preview-button:active {
+            transform: translateY(1px);
+        }
+        
+        /* 預覽按鈕 - 主要操作 */
+        .preview-button {
+            background: linear-gradient(145deg, #3a9c3f, #45a049);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 複製按鈕 - 次要操作 */
+        .copy-button {
+            background: linear-gradient(145deg, #1976D2, #2196F3);
+            color: white;
+        }
+        
+        /* 清除按鈕 - 危險操作 */
+        .clear-button {
+            background: linear-gradient(145deg, #d32f2f, #f44336);
+            color: white;
+        }
+        
+        /* 深色模式下的按鈕樣式 */
+        .dark-mode .preview-button {
+            background: linear-gradient(145deg, #2E7D32, #388E3C);
+        }
+        
+        .dark-mode .copy-button {
+            background: linear-gradient(145deg, #1565C0, #1976D2);
+        }
+        
+        .dark-mode .clear-button {
+            background: linear-gradient(145deg, #c62828, #d32f2f);
+        }
+
+        .template {
+            font-family: 'Roboto Mono', monospace;
+            background: #2196F3;
+            color: white;
+            padding: 0.5rem;
+            margin: 0.3rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .template:hover {
+            background: #1976D2;
+        }
+
+        .placeholder {
+            color: #999;
+            text-align: center;
+            margin: 0;
+            width: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .block .delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4444;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            z-index: 10;
+        }
+
+        .block:hover .delete-btn {
+            display: flex;
+        }
+
+        /* 空格元素樣式 */
+        .block[data-value=" "], 
+        .block:empty {
+            background: #888;
+            position: relative;
+        }
+
+        .block[data-value=" "]::before,
+        .block:empty::before {
+            content: '␣';
+            opacity: 0.8;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .block-tooltip {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            font-size: 0.9rem;
+        }
+
+        /* 錯誤狀態 */
+        .invalid-format {
+            border: 2px solid #ff4444;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 確保拖曳元素可視 */
+        .dragging-ghost {
+            opacity: 0.5;
+            transform: scale(1.05);
+            transition: all 0.3s ease;
+        }
+
+        /* 確保原始區塊保持可點擊 */
+        .blocks-container .block {
+            pointer-events: auto;
+        }
+
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #fff;
+            }
+            
+            .blocks-container,
+            .preview-container {
+                border-color: #444;
+                background-color: #2d2d2d;
+            }
+            
+            .block-category {
+                border-color: #444;
+            }
+            
+            .block-category h3 {
+                color: #ccc;
+        }
+
+        .drop-zone {
+                background: #2d2d2d;
+                border-color: #444;
+            }
+            
+            .drop-zone.dragover {
+                background: #3d3d3d;
+                border-color: #4CAF50;
+            }
+            
+            .placeholder {
+                color: #888;
+            }
+            
+            .template {
+                background: #1976D2;
+            }
+            
+            .template:hover {
+                background: #1565C0;
+            }
+            
+            .preview-button {
+                background: #388E3C;
+            }
+            
+            .preview-button:hover {
+                background: #2E7D32;
+            }
+            
+            .copy-button {
+                background: #1976D2;
+            }
+            
+            .copy-button:hover {
+                background: #1565C0;
+            }
+            
+            .clear-button {
+                background: #d32f2f;
+            }
+            
+            .clear-button:hover {
+                background: #c62828;
+            }
+            
+            .block-tooltip {
+                background-color: #444;
+                color: #fff;
+            }
+        }
+
+        /* 模板按鈕樣式 */
+        .template-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.2rem;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .template-button:hover {
+            background: #1976D2;
+        }
+
+        .button-icon {
+            font-size: 1.2rem;
+        }
+
+        /* 彈出視窗樣式 */
+        .template-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .popup-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: #666;
+            line-height: 1;
+        }
+
+        .popup-body {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .template-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .template-group h4 {
+            margin: 0;
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* 深色模式支援 */
+        @media (prefers-color-scheme: dark) {
+            .popup-content {
+                background: #2d2d2d;
+            }
+
+            .popup-header {
+                background: #2d2d2d;
+                border-bottom-color: #444;
+            }
+
+            .close-button {
+                color: #ccc;
+            }
+
+            .template-group h4 {
+                color: #ccc;
+            }
+        }
+
+        /* 格式和預覽區域的現代化樣式 */
+        #format-text,
+        #preview-text {
+            font-family: 'Roboto Mono', monospace;
+            padding: 1rem;
+            background: var(--bg-color, #f8f9fa);
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+            word-break: break-all;
+            transition: all 0.3s ease;
+        }
+
+        #preview-text {
+            border-left-color: #4CAF50;
+        }
+
+        .dark-mode #format-text,
+        .dark-mode #preview-text {
+            background: #2d2d2d;
+            border-left-color: #1976D2;
+        }
+
+        .dark-mode #preview-text {
+            border-left-color: #388E3C;
+        }
+
+        /* 標題樣式優化 */
+        .preview h3 {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 1.5rem;
+            font-weight: 500;
+        }
+
+        .dark-mode .preview h3 {
+            color: #aaa;
+        }
+
+        /* RWD 設計 */
+        @media screen and (max-width: 768px) {
+            main {
+                flex-direction: column;
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+            
+            .blocks-container {
+                max-width: none;
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .block-category {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+                align-items: center;
+            }
+            
+            .block-category h3 {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .block {
+                margin: 0;
+                font-size: 0.8rem;
+                min-width: 2em;
+                height: 2em;
+                line-height: 2em;
+            }
+            
+            .preview-actions {
+                position: sticky;
+                bottom: 0;
+                background: var(--bg-color);
+                padding: 1rem;
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+                z-index: 100;
+                margin-top: auto;  /* 自動填滿剩餘空間 */
+            }
+            
+            .dark-mode .preview-actions {
+                background: var(--dark-bg-color, #1a1a1a);
+            }
+            
+            .preview-button {
+                flex: 1;
+                max-width: 150px;
+                font-size: 0.9rem;
+                padding: 0.8rem;
+            }
+            
+            #format-text,
+            #preview-text {
+                font-size: 0.9rem;
+                padding: 0.8rem;
+                word-break: break-all;
+                background: var(--bg-color);
+            }
+            
+            .templates-section {
+                margin-bottom: 4rem;  /* 為固定底部按鈕預留空間 */
+            }
+            
+            .template {
+                font-size: 0.8rem;
+                padding: 0.8rem;
+            }
+            
+            .format-builder {
+                flex: initial;  /* 取消自動擴展高度 */
+                margin-bottom: 1rem;
+            }
+        }
+        
+        /* 更小螢幕的優化 */
+        @media screen and (max-width: 480px) {
+            .preview-button {
+                padding: 0.6rem;
+                font-size: 0.8rem;
+                min-width: auto;
+            }
+            
+            .block {
+                padding: 0.3rem;
+                font-size: 0.75rem;
+            }
+            
+            h1 {
+                font-size: 1.2rem;
+            }
+            
+            .block-category h3 {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* 確保在不同裝置上的觸控體驗 */
+        @media (hover: none) {
+            .block:hover .delete-btn {
+                display: flex;  /* 在觸控裝置上總是顯示刪除按鈕 */
+            }
+            
+            .preview-button:active::after {
+                opacity: 1;  /* 改善觸控回饋 */
+            }
+        }
+
+        /* 添加 CSS 變數 */
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #2d2d2d;
+                --text-color: #fff;
+            }
+        }
+
+        /* 複製提示樣式 */
+        .copy-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>日期時間格式產生器</h1>
+    </header>
+
+    <main>
+        <div class="blocks-container">
+            <button class="template-button" onclick="openTemplatePopup()">
+                <span class="button-icon">📋</span>
+                預設模板
+            </button>
+            <div class="block-category">
+                <h3>日期</h3>
+                <div class="block" draggable="true">yyyy</div>
+                <div class="block" draggable="true">yy</div>
+                <div class="block" draggable="true">MM</div>
+                <div class="block" draggable="true">M</div>
+                <div class="block" draggable="true">dd</div>
+                <div class="block" draggable="true">d</div>
+            </div>
+            <div class="block-category">
+                <h3>時間</h3>
+                <div class="block" draggable="true">HH</div>
+                <div class="block" draggable="true">H</div>
+                <div class="block" draggable="true">mm</div>
+                <div class="block" draggable="true">m</div>
+                <div class="block" draggable="true">ss</div>
+                <div class="block" draggable="true">s</div>
+                <div class="block" draggable="true">SSS</div>
+            </div>
+            <div class="block-category">
+                <h3>分隔符號</h3>
+                <div class="block" draggable="true">-</div>
+                <div class="block" draggable="true">:</div>
+                <div class="block" draggable="true">/</div>
+                <div class="block" draggable="true">.</div>
+                <div class="block" draggable="true"> </div>
+            </div>
+            <div class="block-category">
+                <h3>時區</h3>
+                <div class="block" draggable="true">Z</div>
+                <div class="block" draggable="true">ZZ</div>
+                <div class="block" draggable="true">ZZZ</div>
+            </div>
+        </div>
+
+        <div class="preview-container">
+            <!-- 將預覽內容放在最上面 -->
+            <div class="preview">
+                <p id="preview-text">點擊預覽按鈕查看結果</p>
+                <h3>格式字串：</h3>
+                <p id="format-text"></p>
+            </div>
+
+            <!-- 格式編輯區，並將原 .preview-header 移至區塊底部 -->
+            <div class="format-builder">
+                <h3>格式編輯區</h3>
+                <div class="drop-zone">
+                    <p class="placeholder">拖曳積木到這裡</p>
+                </div>
+                <div class="preview-header">
+                    <h3>預覽結果：</h3>
+                    <div class="preview-actions">
+                        <button class="preview-button copy-button" onclick="copyFormat()">複製格式</button>
+                        <button class="preview-button clear-button" onclick="clearDropZone()">清除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 模板彈出視窗 -->
+    <div id="template-popup" class="template-popup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3>選擇預設模板</h3>
+                <button class="close-button" onclick="closeTemplatePopup()">×</button>
+            </div>
+            <div class="popup-body">
+                <div class="template-group">
+                    <h4>日期格式</h4>
+                    <div class="template" data-format="yyyy-MM-dd">ISO 日期 (2024-03-14)</div>
+                    <div class="template" data-format="yyyy/MM/dd">斜線日期 (2024/03/14)</div>
+                    <div class="template" data-format="yyyy.MM.dd">點號日期 (2024.03.14)</div>
+                </div>
+                <div class="template-group">
+                    <h4>時間格式</h4>
+                    <div class="template" data-format="HH:mm">簡短時間 (15:30)</div>
+                    <div class="template" data-format="HH:mm:ss">完整時間 (15:30:45)</div>
+                    <div class="template" data-format="HH:mm:ss.SSS">毫秒時間 (15:30:45.123)</div>
+                </div>
+                <div class="template-group">
+                    <h4>日期時間格式</h4>
+                    <div class="template" data-format="yyyy-MM-dd HH:mm">ISO 日期時間 (2024-03-14 15:30)</div>
+                    <div class="template" data-format="yyyy-MM-dd HH:mm:ss">完整日期時間 (2024-03-14 15:30:45)</div>
+                    <div class="template" data-format="yyyy-MM-dd HH:mm:ss.SSS">完整毫秒時間 (2024-03-14 15:30:45.123)</div>
+                </div>
+                <div class="template-group">
+                    <h4>時區格式</h4>
+                    <div class="template" data-format="yyyy-MM-dd HH:mmZ">ISO 時區 (2024-03-14 15:30+08:00)</div>
+                    <div class="template" data-format="yyyy-MM-dd HH:mm:ssZZ">完整時區 (2024-03-14 15:30:45+0800)</div>
+                    <div class="template" data-format="yyyy-MM-dd HH:mm:ss.SSS ZZZ">完整時區毫秒 (2024-03-14 15:30:45.123 GMT+08:00)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.querySelector('.drop-zone');
+        const formatText = document.getElementById('format-text');
+        const previewText = document.getElementById('preview-text');
+        const placeholder = document.querySelector('.placeholder');
+        const templates = document.querySelectorAll('.template');
+        const blocksContainer = document.querySelector('.blocks-container');
+
+        // 修改 formatHandler 物件
+        const formatHandler = {
+            mappings: {
+                'yyyy': date => date.getFullYear(),
+                'yy': date => date.getFullYear().toString().slice(-2),
+                'MM': date => (date.getMonth() + 1).toString().padStart(2, '0'),
+                'M': date => date.getMonth() + 1,
+                'dd': date => date.getDate().toString().padStart(2, '0'),
+                'd': date => date.getDate(),
+                'HH': date => date.getHours().toString().padStart(2, '0'),
+                'H': date => date.getHours(),
+                'mm': date => date.getMinutes().toString().padStart(2, '0'),
+                'm': date => date.getMinutes(),
+                'ss': date => date.getSeconds().toString().padStart(2, '0'),
+                's': date => date.getSeconds(),
+                'SSS': date => date.getMilliseconds().toString().padStart(3, '0'),
+                'Z': date => {
+                    const offset = date.getTimezoneOffset();
+                    const sign = offset <= 0 ? '+' : '-';
+                    const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
+                    const minutes = Math.abs(offset % 60).toString().padStart(2, '0');
+                    return `${sign}${hours}:${minutes}`;
+                },
+                'ZZ': date => {
+                    const offset = date.getTimezoneOffset();
+                    const sign = offset <= 0 ? '+' : '-';
+                    const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
+                    const minutes = Math.abs(offset % 60).toString().padStart(2, '0');
+                    return `${sign}${hours}${minutes}`;
+                },
+                'ZZZ': date => {
+                    const offset = date.getTimezoneOffset();
+                    const sign = offset <= 0 ? '+' : '-';
+                    const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
+                    const minutes = Math.abs(offset % 60).toString().padStart(2, '0');
+                    return `GMT${sign}${hours}:${minutes}`;
+                }
+            },
+            
+            parse(format, date) {
+                // 加入特殊符號的處理
+                const specialChars = ['-', ':', '/', '.', ' '];
+                
+                // 先處理時區格式，避免重複替換
+                const timeZoneFormats = ['ZZZ', 'ZZ', 'Z'];
+                let processedFormat = format;
+                
+                // 使用更精確的正則表達式來匹配時區格式
+                for (const tzFormat of timeZoneFormats) {
+                    const tzRegex = new RegExp(`\\b${tzFormat}\\b`);  // 使用單詞邊界
+                    if (tzRegex.test(processedFormat)) {
+                        processedFormat = processedFormat.replace(
+                            tzRegex,
+                            this.mappings[tzFormat](date)
+                        );
+                        break;
+                    }
+                }
+                
+                // 處理其他格式
+                return processedFormat.split(/(\W)/).map(part => {
+                    if (specialChars.includes(part)) return part;
+                    // 排除已處理的時區格式
+                    if (timeZoneFormats.includes(part)) return part;
+                    
+                    return Object.entries(this.mappings)
+                        .filter(([key]) => !timeZoneFormats.includes(key))
+                        .reduce((acc, [key, fn]) => {
+                            const regex = new RegExp(`\\b${key}\\b`, 'g');  // 使用單詞邊界
+                            return acc.replace(regex, fn(date));
+                        }, part);
+                }).join('');
+            }
+        };
+
+        // 修改 blocksContainer 的 Sortable 初始化配置
+        new Sortable(blocksContainer, {
+            group: {
+                name: 'blocks',
+                pull: 'clone',
+                put: false
+            },
+            sort: false,
+            draggable: '.block',
+            ghostClass: 'dragging-ghost',
+            animation: 150,
+        });
+
+        // 修改 dropZone 的 Sortable 配置
+        new Sortable(dropZone, {
+            group: {
+                name: 'blocks',
+                pull: false,
+                put: true
+            },
+            animation: 150,
+            ghostClass: 'dragging',
+            chosenClass: 'dragging',
+            onSort: function() {
+                updatePlaceholder();
+                updateFormat();
+                generatePreview();
+            },
+            onAdd: function(evt) {
+                const block = evt.item;
+                block.draggable = true;
+                // 添加刪除按鈕
+                const deleteBtn = document.createElement('div');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '×';
+                block.appendChild(deleteBtn);
+                updatePlaceholder();
+                updateFormat();
+                generatePreview();
+            },
+            onChoose: function(evt) {
+                evt.item.style.transform = 'scale(1.1)';
+            },
+            onUnchoose: function(evt) {
+                evt.item.style.transform = '';
+            }
+        });
+
+        function formatDate(format, date) {
+            return formatHandler.parse(format, date);
+        }
+
+        function updateFormat() {
+            const blocks = dropZone.querySelectorAll('.block');
+            const format = Array.from(blocks).map(block => {
+                // 只取積木的第一個文字節點的內容
+                const textNode = Array.from(block.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                return textNode ? textNode.textContent : '';
+            }).join('');
+            formatText.textContent = format;
+            generatePreview();
+        }
+
+        let previewTimeout;
+        function debouncedGeneratePreview() {
+            clearTimeout(previewTimeout);
+            previewTimeout = setTimeout(generatePreview, 300);
+        }
+
+        function validateFormat(format) {
+            // 定義所有有效的格式標記
+            const validTokens = [
+                'yyyy', 'yy', 'MM', 'M', 'dd', 'd', 
+                'HH', 'H', 'mm', 'm', 'ss', 's', 'SSS',
+                'Z', 'ZZ', 'ZZZ'
+            ];
+            
+            // 定義有效的分隔符
+            const specialChars = ['-', ':', '/', '.', ' '];
+            
+            // 建立一個正則表達式來匹配所有有效的格式標記
+            const tokenPattern = new RegExp(
+                validTokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + 
+                '|[' + specialChars.join('') + ']'
+            );
+            
+            // 將格式字串分割成標記
+            let remainingFormat = format;
+            while (remainingFormat.length > 0) {
+                const match = remainingFormat.match(tokenPattern);
+                if (!match || match.index !== 0) {
+                    return false;
+                }
+                remainingFormat = remainingFormat.slice(match[0].length);
+            }
+            
+            return true;
+        }
+
+        function generatePreview() {
+            const format = formatText.textContent;
+            if (!validateFormat(format)) {
+                previewText.style.color = 'red';
+                previewText.textContent = '無效的格式組合';
+                return;
+            }
+            const now = new Date();
+            previewText.textContent = formatDate(format, now);
+        }
+
+        function copyFormat() {
+            const format = formatText.textContent;
+            navigator.clipboard.writeText(format).then(() => {
+                showCopyToast('格式已複製');
+            });
+        }
+
+        function showCopyToast(message) {
+            // 移除舊的提示（如果存在）
+            const oldToast = document.querySelector('.copy-toast');
+            if (oldToast) {
+                oldToast.remove();
+            }
+
+            // 創建新的提示
+            const toast = document.createElement('div');
+            toast.className = 'copy-toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // 顯示提示
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            // 3秒後隱藏並移除提示
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        function clearDropZone() {
+            dropZone.innerHTML = '<p class="placeholder">拖曳積木到這裡</p>';
+            updatePlaceholder();
+            updateFormat();
+            generatePreview();
+        }
+
+        function updatePlaceholder() {
+            // 每次重新查詢 dropZone 內的最新 .placeholder
+            const currentPlaceholder = dropZone.querySelector('.placeholder');
+            const blockCount = dropZone.querySelectorAll('.block').length;
+            if (currentPlaceholder) {
+                currentPlaceholder.style.display = blockCount > 0 ? 'none' : 'block';
+            }
+        }
+
+        // 使用事件代理處理刪除按鈕點擊
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                e.stopPropagation();
+                const block = e.target.parentElement;
+                block.remove();
+                updatePlaceholder();
+                updateFormat();
+                generatePreview();
+            }
+        });
+
+        // 修改模板點擊事件處理
+        templates.forEach(template => {
+            template.addEventListener('click', () => {
+                const format = template.dataset.format;
+                clearDropZone();
+                format.split(/([^A-Za-z0-9])/).filter(Boolean).forEach(part => {
+                    const block = document.createElement('div');
+                    block.className = 'block';
+                    block.textContent = part;
+                    block.dataset.value = part.replace(/^Z+$/, match => {
+                        if (match === 'ZZ') return 'ZZ';
+                        if (match === 'ZZZ') return 'ZZZ';
+                        return 'Z';
+                    });
+                    // 添加刪除按鈕
+                    const deleteBtn = document.createElement('div');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = '×';
+                    block.appendChild(deleteBtn);
+                    dropZone.appendChild(block);
+                });
+                updatePlaceholder();
+                updateFormat();
+                generatePreview();
+                closeTemplatePopup(); // 選擇模板後關閉彈出視窗
+            });
+        });
+
+        // 修改雙擊事件處理
+        function handleDoubleClick(e) {
+            // 確保點擊的是原始區塊而非複製的區塊
+            if (!e.target.closest('.blocks-container .block')) return;
+
+            const originalText = e.target.textContent;
+            const newBlock = document.createElement('div');
+            newBlock.className = 'block';
+            newBlock.textContent = originalText;
+            newBlock.draggable = true;
+            
+            // 處理特殊格式
+            newBlock.dataset.value = originalText.replace(/^Z+$/, match => {
+                if (match === 'ZZ') return 'ZZ';
+                if (match === 'ZZZ') return 'ZZZ';
+                return 'Z';
+            });
+
+            // 添加刪除按鈕
+            const deleteBtn = document.createElement('div');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '×';
+            newBlock.appendChild(deleteBtn);
+
+            // 添加到 dropZone 並更新狀態
+            dropZone.appendChild(newBlock);
+            updatePlaceholder();
+            updateFormat();
+            generatePreview();
+        }
+
+        // 修改事件綁定方式（使用事件代理）
+        blocksContainer.addEventListener('dblclick', (e) => {
+            if (e.target.classList.contains('block')) {
+                handleDoubleClick(e);
+            }
+        });
+
+        // 新增格式標記說明物件
+        const tokenExplanations = {
+            'yyyy': '4位數年份 (例如：2024)',
+            'yy': '2位數年份 (例如：24)',
+            'MM': '2位數月份 (例如：03)',
+            'M': '月份 (例如：3)',
+            'dd': '2位數日期 (例如：09)',
+            'd': '日期 (例如：9)',
+            'HH': '2位數小時 (例如：08)',
+            'H': '小時 (例如：8)',
+            'mm': '2位數分鐘 (例如：07)',
+            'm': '分鐘 (例如：7)',
+            'ss': '2位數秒數 (例如：05)',
+            's': '秒數 (例如：5)',
+            'SSS': '毫秒 (例如：123)',
+            'Z': '時區 (ISO標準：+08:00)',
+            'ZZ': '時區 (無分隔符：+0800)',
+            'ZZZ': '時區 (全名：GMT+08:00)'
+        };
+        
+        // 更新 block 的 mouseenter 事件，顯示「預覽」與「說明」
+        blocksContainer.querySelectorAll('.block').forEach(block => {
+            block.addEventListener('mouseenter', (e) => {
+                const token = e.target.textContent.trim();
+                const now = new Date();
+                const preview = formatDate(token, now);
+                const explanation = tokenExplanations[token] || '';
+                let tooltipText = explanation
+                    ? `${token}：${explanation}\n預覽：${preview}`
+                    : `預覽：${preview}`;
+                e.target.dataset.tooltip = tooltipText;
+                showTooltip(e.target);
+            });
+            block.addEventListener('mouseleave', hideTooltip);
+        });
+
+        // 新增工具提示函數
+        function showTooltip(element) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'block-tooltip';
+            tooltip.textContent = element.dataset.tooltip;
+            document.body.appendChild(tooltip);
+            
+            const rect = element.getBoundingClientRect();
+            tooltip.style.position = 'fixed';
+            tooltip.style.left = `${rect.left}px`;
+            tooltip.style.top = `${rect.top - 30}px`;
+        }
+
+        function hideTooltip() {
+            const tooltip = document.querySelector('.block-tooltip');
+            if (tooltip) tooltip.remove();
+        }
+
+        // 新增模板彈出視窗功能
+        function openTemplatePopup() {
+            const popup = document.getElementById('template-popup');
+            popup.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTemplatePopup() {
+            const popup = document.getElementById('template-popup');
+            popup.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // 點擊彈出視窗外部關閉
+        document.getElementById('template-popup').addEventListener('click', (e) => {
+            if (e.target.id === 'template-popup') {
+                closeTemplatePopup();
+            }
+        });
+
+        // ESC 鍵關閉彈出視窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeTemplatePopup();
+            }
+        });
+    </script>
+</body>
+</html> 
