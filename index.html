@@ -92,22 +92,18 @@
             flex-direction: column;
         }
         
-        .format-builder {
-            order: 1;
-        }
-        
         .preview {
-            order: 2;
+            order: 1;
             position: relative;
             padding-bottom: 1rem;  /* 已調整預留空間 */
         }
         
-        .templates-section {
-            order: 3;
-        }
-
         .format-builder {
-            flex: 1;
+            order: 2;
+        }
+        
+        .preview-header {
+            order: 3;
         }
 
         .drop-zone {
@@ -229,6 +225,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            pointer-events: none;
         }
 
         .block .delete-btn {
@@ -746,18 +743,20 @@
                 <p id="format-text"></p>
             </div>
 
-            <!-- 格式編輯區，並將原 .preview-header 移至區塊底部 -->
+            <!-- 格式編輯區 -->
             <div class="format-builder">
                 <h3>格式編輯區</h3>
                 <div class="drop-zone">
-                    <p class="placeholder">拖曳積木到這裡</p>
+                    <p class="placeholder">雙擊左側積木以新增此處</p>
                 </div>
-                <div class="preview-header">
-                    <h3>預覽結果：</h3>
-                    <div class="preview-actions">
-                        <button class="preview-button copy-button" onclick="copyFormat()">複製格式</button>
-                        <button class="preview-button clear-button" onclick="clearDropZone()">清除</button>
-                    </div>
+            </div>
+
+            <!-- 預覽結果操作區（原 .preview-header 從格式編輯區中移出）-->
+            <div class="preview-header">
+                <h3>預覽結果：</h3>
+                <div class="preview-actions">
+                    <button class="preview-button copy-button" onclick="copyFormat()">複製格式</button>
+                    <button class="preview-button clear-button" onclick="clearDropZone()">清除</button>
                 </div>
             </div>
         </div>
@@ -807,133 +806,6 @@
         const templates = document.querySelectorAll('.template');
         const blocksContainer = document.querySelector('.blocks-container');
 
-        // 修改 formatHandler 物件
-        const formatHandler = {
-            mappings: {
-                'yyyy': date => date.getFullYear(),
-                'yy': date => date.getFullYear().toString().slice(-2),
-                'MM': date => (date.getMonth() + 1).toString().padStart(2, '0'),
-                'M': date => date.getMonth() + 1,
-                'dd': date => date.getDate().toString().padStart(2, '0'),
-                'd': date => date.getDate(),
-                'HH': date => date.getHours().toString().padStart(2, '0'),
-                'H': date => date.getHours(),
-                'mm': date => date.getMinutes().toString().padStart(2, '0'),
-                'm': date => date.getMinutes(),
-                'ss': date => date.getSeconds().toString().padStart(2, '0'),
-                's': date => date.getSeconds(),
-                'SSS': date => date.getMilliseconds().toString().padStart(3, '0'),
-                'Z': date => {
-                    const offset = date.getTimezoneOffset();
-                    const sign = offset <= 0 ? '+' : '-';
-                    const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
-                    const minutes = Math.abs(offset % 60).toString().padStart(2, '0');
-                    return `${sign}${hours}:${minutes}`;
-                },
-                'ZZ': date => {
-                    const offset = date.getTimezoneOffset();
-                    const sign = offset <= 0 ? '+' : '-';
-                    const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
-                    const minutes = Math.abs(offset % 60).toString().padStart(2, '0');
-                    return `${sign}${hours}${minutes}`;
-                },
-                'ZZZ': date => {
-                    const offset = date.getTimezoneOffset();
-                    const sign = offset <= 0 ? '+' : '-';
-                    const hours = Math.abs(Math.floor(offset / 60)).toString().padStart(2, '0');
-                    const minutes = Math.abs(offset % 60).toString().padStart(2, '0');
-                    return `GMT${sign}${hours}:${minutes}`;
-                }
-            },
-            
-            parse(format, date) {
-                // 加入特殊符號的處理
-                const specialChars = ['-', ':', '/', '.', ' '];
-                
-                // 先處理時區格式，避免重複替換
-                const timeZoneFormats = ['ZZZ', 'ZZ', 'Z'];
-                let processedFormat = format;
-                
-                // 使用更精確的正則表達式來匹配時區格式
-                for (const tzFormat of timeZoneFormats) {
-                    const tzRegex = new RegExp(`\\b${tzFormat}\\b`);  // 使用單詞邊界
-                    if (tzRegex.test(processedFormat)) {
-                        processedFormat = processedFormat.replace(
-                            tzRegex,
-                            this.mappings[tzFormat](date)
-                        );
-                        break;
-                    }
-                }
-                
-                // 處理其他格式
-                return processedFormat.split(/(\W)/).map(part => {
-                    if (specialChars.includes(part)) return part;
-                    // 排除已處理的時區格式
-                    if (timeZoneFormats.includes(part)) return part;
-                    
-                    return Object.entries(this.mappings)
-                        .filter(([key]) => !timeZoneFormats.includes(key))
-                        .reduce((acc, [key, fn]) => {
-                            const regex = new RegExp(`\\b${key}\\b`, 'g');  // 使用單詞邊界
-                            return acc.replace(regex, fn(date));
-                        }, part);
-                }).join('');
-            }
-        };
-
-        // 修改 blocksContainer 的 Sortable 初始化配置
-        new Sortable(blocksContainer, {
-            group: {
-                name: 'blocks',
-                pull: 'clone',
-                put: false
-            },
-            sort: false,
-            draggable: '.block',
-            ghostClass: 'dragging-ghost',
-            animation: 150,
-        });
-
-        // 修改 dropZone 的 Sortable 配置
-        new Sortable(dropZone, {
-            group: {
-                name: 'blocks',
-                pull: false,
-                put: true
-            },
-            animation: 150,
-            ghostClass: 'dragging',
-            chosenClass: 'dragging',
-            onSort: function() {
-                updatePlaceholder();
-                updateFormat();
-                generatePreview();
-            },
-            onAdd: function(evt) {
-                const block = evt.item;
-                block.draggable = true;
-                // 添加刪除按鈕
-                const deleteBtn = document.createElement('div');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.textContent = '×';
-                block.appendChild(deleteBtn);
-                updatePlaceholder();
-                updateFormat();
-                generatePreview();
-            },
-            onChoose: function(evt) {
-                evt.item.style.transform = 'scale(1.1)';
-            },
-            onUnchoose: function(evt) {
-                evt.item.style.transform = '';
-            }
-        });
-
-        function formatDate(format, date) {
-            return formatHandler.parse(format, date);
-        }
-
         function updateFormat() {
             const blocks = dropZone.querySelectorAll('.block');
             const format = Array.from(blocks).map(block => {
@@ -945,42 +817,6 @@
             generatePreview();
         }
 
-        let previewTimeout;
-        function debouncedGeneratePreview() {
-            clearTimeout(previewTimeout);
-            previewTimeout = setTimeout(generatePreview, 300);
-        }
-
-        function validateFormat(format) {
-            // 定義所有有效的格式標記
-            const validTokens = [
-                'yyyy', 'yy', 'MM', 'M', 'dd', 'd', 
-                'HH', 'H', 'mm', 'm', 'ss', 's', 'SSS',
-                'Z', 'ZZ', 'ZZZ'
-            ];
-            
-            // 定義有效的分隔符
-            const specialChars = ['-', ':', '/', '.', ' '];
-            
-            // 建立一個正則表達式來匹配所有有效的格式標記
-            const tokenPattern = new RegExp(
-                validTokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + 
-                '|[' + specialChars.join('') + ']'
-            );
-            
-            // 將格式字串分割成標記
-            let remainingFormat = format;
-            while (remainingFormat.length > 0) {
-                const match = remainingFormat.match(tokenPattern);
-                if (!match || match.index !== 0) {
-                    return false;
-                }
-                remainingFormat = remainingFormat.slice(match[0].length);
-            }
-            
-            return true;
-        }
-
         function generatePreview() {
             const format = formatText.textContent;
             if (!validateFormat(format)) {
@@ -989,7 +825,8 @@
                 return;
             }
             const now = new Date();
-            previewText.textContent = formatDate(format, now);
+            const result = formatDate(format, now);
+            previewText.textContent = result;
         }
 
         function copyFormat() {
@@ -999,42 +836,14 @@
             });
         }
 
-        function showCopyToast(message) {
-            // 移除舊的提示（如果存在）
-            const oldToast = document.querySelector('.copy-toast');
-            if (oldToast) {
-                oldToast.remove();
-            }
-
-            // 創建新的提示
-            const toast = document.createElement('div');
-            toast.className = 'copy-toast';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            // 顯示提示
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
-
-            // 3秒後隱藏並移除提示
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }, 3000);
-        }
-
         function clearDropZone() {
-            dropZone.innerHTML = '<p class="placeholder">拖曳積木到這裡</p>';
+            dropZone.innerHTML = '<p class="placeholder">雙擊左側積木以新增此處</p>';
             updatePlaceholder();
             updateFormat();
             generatePreview();
         }
 
         function updatePlaceholder() {
-            // 每次重新查詢 dropZone 內的最新 .placeholder
             const currentPlaceholder = dropZone.querySelector('.placeholder');
             const blockCount = dropZone.querySelectorAll('.block').length;
             if (currentPlaceholder) {
@@ -1042,70 +851,25 @@
             }
         }
 
-        // 使用事件代理處理刪除按鈕點擊
-        dropZone.addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-btn')) {
-                e.stopPropagation();
-                const block = e.target.parentElement;
-                block.remove();
-                updatePlaceholder();
-                updateFormat();
-                generatePreview();
-            }
-        });
-
-        // 修改模板點擊事件處理
-        templates.forEach(template => {
-            template.addEventListener('click', () => {
-                const format = template.dataset.format;
-                clearDropZone();
-                format.split(/([^A-Za-z0-9])/).filter(Boolean).forEach(part => {
-                    const block = document.createElement('div');
-                    block.className = 'block';
-                    block.textContent = part;
-                    block.dataset.value = part.replace(/^Z+$/, match => {
-                        if (match === 'ZZ') return 'ZZ';
-                        if (match === 'ZZZ') return 'ZZZ';
-                        return 'Z';
-                    });
-                    // 添加刪除按鈕
-                    const deleteBtn = document.createElement('div');
-                    deleteBtn.className = 'delete-btn';
-                    deleteBtn.textContent = '×';
-                    block.appendChild(deleteBtn);
-                    dropZone.appendChild(block);
-                });
-                updatePlaceholder();
-                updateFormat();
-                generatePreview();
-                closeTemplatePopup(); // 選擇模板後關閉彈出視窗
-            });
-        });
-
-        // 修改雙擊事件處理
         function handleDoubleClick(e) {
             // 確保點擊的是原始區塊而非複製的區塊
             if (!e.target.closest('.blocks-container .block')) return;
-
             const originalText = e.target.textContent;
             const newBlock = document.createElement('div');
             newBlock.className = 'block';
             newBlock.textContent = originalText;
             newBlock.draggable = true;
-            
             // 處理特殊格式
             newBlock.dataset.value = originalText.replace(/^Z+$/, match => {
                 if (match === 'ZZ') return 'ZZ';
                 if (match === 'ZZZ') return 'ZZZ';
                 return 'Z';
             });
-
             // 添加刪除按鈕
             const deleteBtn = document.createElement('div');
             deleteBtn.className = 'delete-btn';
             deleteBtn.textContent = '×';
             newBlock.appendChild(deleteBtn);
-
             // 添加到 dropZone 並更新狀態
             dropZone.appendChild(newBlock);
             updatePlaceholder();
