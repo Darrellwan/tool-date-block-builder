@@ -828,10 +828,17 @@
 
         <div class="preview-container">
             <!-- 將預覽內容放在最上面 -->
-            <div class="preview">
-                <p id="preview-text">點擊預覽按鈕查看結果</p>
-                <h3>格式字串：</h3>
-                <p id="format-text"></p>
+            <div class="preview-header">
+                <h3>預覽結果：</h3>
+                <div class="preview">
+                    <p id="preview-text">點擊預覽按鈕查看結果</p>
+                    <h3>格式字串：</h3>
+                    <p id="format-text"></p>
+                </div>
+                <div class="preview-actions">
+                    <button class="preview-button copy-button" onclick="copyFormat()">複製格式</button>
+                    <button class="preview-button clear-button" onclick="clearDropZone()">清除</button>
+                </div>
             </div>
 
             <!-- 格式編輯區 -->
@@ -839,15 +846,6 @@
                 <h3>格式編輯區</h3>
                 <div class="drop-zone">
                     <p class="placeholder">雙點擊積木新增，或使用模板</p>
-                </div>
-            </div>
-
-            <!-- 預覽結果操作區（原 .preview-header 從格式編輯區中移出）-->
-            <div class="preview-header">
-                <h3>預覽結果：</h3>
-                <div class="preview-actions">
-                    <button class="preview-button copy-button" onclick="copyFormat()">複製格式</button>
-                    <button class="preview-button clear-button" onclick="clearDropZone()">清除</button>
                 </div>
             </div>
         </div>
