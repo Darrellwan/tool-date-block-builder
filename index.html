@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta property="og:image" content="og_image.jpg">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>積木日期格式工坊</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
@@ -74,10 +75,15 @@
         @media (max-width: 768px) {
             header {
                 padding: 1rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
             }
             
             .header-right {
-                right: 1rem;
+                position: static;
+                transform: none;
             }
             
             .social-links {
